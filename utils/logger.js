@@ -1,4 +1,3 @@
-#!/usr/bin/node
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -17,4 +16,4 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-export { logger };
+export default logger;

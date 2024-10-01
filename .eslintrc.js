@@ -3,6 +3,7 @@ module.exports = {
     browser: false,
     es6: true,
     node: true,
+    jest: true,
   },
   extends: [
     'airbnb-base',
@@ -22,5 +23,9 @@ module.exports = {
       js: 'never',
       mjs: 'never',
     }],
+    'import/no-unresolved': 'off',
+    'import/prefer-default-export': 'off',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'class-methods-use-this': 'off',
   },
 };

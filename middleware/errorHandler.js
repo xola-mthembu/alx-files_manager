@@ -1,7 +1,6 @@
-#!/usr/bin/node
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 
-export default function errorHandler(err, req, res, next) {
+export default function errorHandler(err, req, res, _next) {
   logger.error(err.stack);
 
   const statusCode = err.statusCode || 500;

@@ -1,4 +1,3 @@
-#!/usr/bin/node
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -23,7 +22,9 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { name, type, parentId = 0, isPublic = false, data } = req.body;
+    const {
+      name, type, parentId = 0, isPublic = false, data,
+    } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Missing name' });
@@ -65,38 +66,38 @@ class FilesController {
         isPublic: newFile.isPublic,
         parentId: newFile.parentId,
       });
-    } else {
-      const fileUuid = uuidv4();
-      const localPath = path.join(FOLDER_PATH, fileUuid);
+    }
 
-      // Create the directory if it doesn't exist
-      if (!fs.existsSync(FOLDER_PATH)) {
-        fs.mkdirSync(FOLDER_PATH, { recursive: true });
-      }
+    const fileUuid = uuidv4();
+    const localPath = path.join(FOLDER_PATH, fileUuid);
 
-      // Write the file content
-      fs.writeFileSync(localPath, Buffer.from(data, 'base64'));
+    // Create the directory if it doesn't exist
+    if (!fs.existsSync(FOLDER_PATH)) {
+      fs.mkdirSync(FOLDER_PATH, { recursive: true });
+    }
 
-      newFile.localPath = localPath;
+    // Write the file content
+    fs.writeFileSync(localPath, Buffer.from(data, 'base64'));
 
-      const result = await dbClient.client.db().collection('files').insertOne(newFile);
+    newFile.localPath = localPath;
 
-      if (type === 'image') {
-        fileQueue.add({
-          userId: userId.toString(),
-          fileId: result.insertedId.toString(),
-        });
-      }
+    const result = await dbClient.client.db().collection('files').insertOne(newFile);
 
-      return res.status(201).json({
-        id: result.insertedId,
-        userId: newFile.userId,
-        name: newFile.name,
-        type: newFile.type,
-        isPublic: newFile.isPublic,
-        parentId: newFile.parentId,
+    if (type === 'image') {
+      fileQueue.add({
+        userId: userId.toString(),
+        fileId: result.insertedId.toString(),
       });
     }
+
+    return res.status(201).json({
+      id: result.insertedId,
+      userId: newFile.userId,
+      name: newFile.name,
+      type: newFile.type,
+      isPublic: newFile.isPublic,
+      parentId: newFile.parentId,
+    });
   }
 
   static async getShow(req, res) {
@@ -132,7 +133,7 @@ class FilesController {
     }
 
     const parentId = req.query.parentId || '0';
-    const page = parseInt(req.query.page) || 0;
+    const page = parseInt(req.query.page, 10) || 0;
     const pageSize = 20;
 
     const query = { userId: ObjectId(userId) };
@@ -171,7 +172,7 @@ class FilesController {
 
     await dbClient.client.db().collection('files').updateOne(
       { _id: ObjectId(fileId) },
-      { $set: { isPublic: true } }
+      { $set: { isPublic: true } },
     );
 
     return res.status(200).json({ ...file, isPublic: true });
@@ -197,7 +198,7 @@ class FilesController {
 
     await dbClient.client.db().collection('files').updateOne(
       { _id: ObjectId(fileId) },
-      { $set: { isPublic: false } }
+      { $set: { isPublic: false } },
     );
 
     return res.status(200).json({ ...file, isPublic: false });
@@ -205,7 +206,7 @@ class FilesController {
 
   static async getFile(req, res) {
     const fileId = req.params.id;
-    const size = req.query.size;
+    const { size } = req.query;
 
     const file = await dbClient.client.db().collection('files').findOne({ _id: ObjectId(fileId) });
 
@@ -238,7 +239,7 @@ class FilesController {
     res.setHeader('Content-Type', mimeType);
 
     const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    return fileStream.pipe(res);
   }
 }
 

@@ -26,7 +26,7 @@ describe('API Integration Tests', () => {
       expect(authRes.statusCode).toEqual(200);
       expect(authRes.body).toHaveProperty('token');
 
-      const token = authRes.body.token;
+      const { token } = authRes.body;
 
       // Get user info
       const userInfoRes = await request(app)

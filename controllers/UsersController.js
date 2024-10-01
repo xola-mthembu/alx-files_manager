@@ -1,9 +1,8 @@
-#!/usr/bin/node
 import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
+import Bull from 'bull';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-import Bull from 'bull';
 
 const userQueue = new Bull('userQueue');
 
@@ -30,7 +29,7 @@ class UsersController {
     };
 
     const result = await dbClient.client.db().collection('users').insertOne(newUser);
-    
+
     userQueue.add({
       userId: result.insertedId.toString(),
     });
