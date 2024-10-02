@@ -1,6 +1,6 @@
-#!/usr/bin/env node
-
+#!/usr/bin/node
 import sha1 from 'sha1';
+import { ObjectId } from 'mongodb';
 import dbClient from '../utils/db';
 
 class UsersController {
@@ -10,26 +10,27 @@ class UsersController {
     if (!email) {
       return res.status(400).json({ error: 'Missing email' });
     }
-
     if (!password) {
       return res.status(400).json({ error: 'Missing password' });
     }
 
-    const userExists = await dbClient.db
-      .collection('users')
-      .findOne({ email });
+    const usersCollection = dbClient.client.db().collection('users');
+    const existingUser = await usersCollection.findOne({ email });
 
-    if (userExists) {
+    if (existingUser) {
       return res.status(400).json({ error: 'Already exist' });
     }
 
     const hashedPassword = sha1(password);
-    const result = await dbClient.db.collection('users').insertOne({
+    const newUser = await usersCollection.insertOne({
       email,
       password: hashedPassword,
     });
 
-    return res.status(201).json({ id: result.insertedId, email });
+    return res.status(201).json({
+      id: newUser.insertedId,
+      email,
+    });
   }
 }
 
